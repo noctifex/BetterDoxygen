@@ -1,22 +1,27 @@
 {
   "name": "betterdoxygen",
   "displayName": "BetterDoxygen",
-  "description": "Improve the visual presentation of code symbols and Doxygen documentation.",
+  "description": "Improve the readability and presentation of Doxygen documentation in Visual Studio Code.",
   "version": "0.0.1",
+  "publisher": "Noctifex",
+  "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "vscode": "^1.125.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/noctifex/BetterDoxygen"
+  },
+  "bugs": {
+    "url": "https://github.com/noctifex/BetterDoxygen/issues"
+  },
+  "homepage": "https://github.com/noctifex/BetterDoxygen#readme",
+  "icon": "/assets/icon.png",
   "categories": [
     "Other"
   ],
   "activationEvents": [],
   "main": "./extension.js",
-  "contributes": {
-    "commands": [{
-      "command": "betterdoxygen.helloWorld",
-      "title": "Hello World"
-    }]
-  },
   "scripts": {
     "lint": "eslint .",
     "pretest": "npm run lint",
