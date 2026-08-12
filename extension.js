@@ -1,36 +1,45 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+// extension.js — betterdoxygen
+// Entry point for the extension.
+//
+// Copyright (C) 2026 Noctifex
+//
+// Licensed under the GNU General Public License v3.0.
+// See <https://www.gnu.org/licenses/> for the full text.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+
 const vscode = require('vscode');
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+const config = require('./config.json');
+const { provideHover } = require('./hover/provider.js');
 
 /**
- * @param {vscode.ExtensionContext} context
+ * @brief Activates the extension and registers the hover provider.
+ *
+ * @param {vscode.ExtensionContext} context The extension context.
  */
 function activate(context) {
+	console.log('BetterDoxygen: Extension is now active');
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "betterdoxygen" is now active!');
+  const hoverProvider = vscode.languages.registerHoverProvider(
+    config.targets,
+    { provideHover }
+  );
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('betterdoxygen.helloWorld', function () {
-		// The code you place here will be executed every time your command is executed
+	context.subscriptions.push(hoverProvider);
 
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from BetterDoxygen!');
-	});
-
-	context.subscriptions.push(disposable);
+  console.log('BetterDoxygen: Hover provider registered');
 }
 
-// This method is called when your extension is deactivated
+/**
+ * @brief Called when the extension is deactivated.
+ */
 function deactivate() {}
 
 module.exports = {
 	activate,
 	deactivate
-}
+};
