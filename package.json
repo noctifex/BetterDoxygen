@@ -35,7 +35,8 @@
     "@types/node": "24.x",
     "eslint": "^10.5.0",
     "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0"
+    "@vscode/test-electron": "^3.0.0",
+    "globals": "^17.11.0"
   },
   "overrides": {
     "diff": "^8.0.4",
