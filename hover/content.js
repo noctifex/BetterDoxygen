@@ -19,9 +19,9 @@ const vscode = require('vscode');
  * @param {vscode.TextDocument} _document The text document.
  * @param {vscode.Position} _position The position in the document.
  * @param {vscode.CancellationToken} _token The cancellation token.
- * @returns {vscode.MarkdownString} The rendered hover content.
+ * @returns {Promise<vscode.MarkdownString>} The rendered hover content.
  */
-function buildHoverContent(_document, _position, _token) {
+async function buildHoverContent(_document, _position, _token) {
   const markdown = new vscode.MarkdownString();
   markdown.supportHtml = true;
 

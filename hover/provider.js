@@ -21,10 +21,10 @@ const { buildHoverContent } = require('./content.js');
  * @param {vscode.TextDocument} document The text document.
  * @param {vscode.Position} position The position in the document.
  * @param {vscode.CancellationToken} token A token to cancel the operation.
- * @returns {vscode.Hover | undefined} The hover to display.
+ * @returns {Promise<vscode.Hover | undefined>} The hover to display.
  */
-function provideHover(document, position, token) { 
-  const content = buildHoverContent(document, position, token);
+async function provideHover(document, position, token) {
+  const content = await buildHoverContent(document, position, token);
 
   if (!content) {
     return undefined;
