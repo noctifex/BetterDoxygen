@@ -15,8 +15,10 @@ const { resolveSymbol } = require('./resolve.js');
 const { classifySymbol } = require('./classify/index.js');
 
 const { getEnumInfo } = require('./handlers/enum.js');
+const { getMacroInfo } = require('./handlers/macro.js');
 const { getClassInfo } = require('./handlers/class.js');
 const { getLiteralInfo } = require('./handlers/literal.js');
+const { getGenericInfo } = require('./handlers/generic.js');
 const { getVariableInfo } = require('./handlers/variable.js');
 const { getFunctionInfo } = require('./handlers/function.js');
 
@@ -39,7 +41,7 @@ async function getSymbolInfo(document, position, token) {
   }
 
   let symbol = resolvedSymbol;
-  if (symbol.classification === undefined) {
+  if (symbol.kind === undefined || symbol.category === undefined) {
     symbol = await classifySymbol(symbol, token);
   }
 
@@ -48,14 +50,10 @@ async function getSymbolInfo(document, position, token) {
   }
 
   if (!symbol) {
-    return getUnclassifiedSymbolInfo(resolvedSymbol);
+    symbol = resolvedSymbol;
   }
 
-  if (symbol.classification === undefined || symbol.category === undefined) {
-    return getUnclassifiedSymbolInfo(symbol);
-  }
-
-  switch (symbol.category) {
+  switch (symbol.kind) {
     case 'enum':
       return getEnumInfo(symbol, token);
     case 'class':
@@ -66,80 +64,21 @@ async function getSymbolInfo(document, position, token) {
       return getVariableInfo(symbol, token);
     case 'function':
       return getFunctionInfo(symbol, token);
+    case 'macro':
+      return getMacroInfo(symbol, token);
+    case 'file':
+    case 'module':
+    case 'namespace':
+    case 'alias':
+    case 'template':
+    case 'concept':
+    case 'label':
+    case 'symbol':
+      return getGenericInfo(symbol, token);
 
     default:
-      return getUnsupportedSymbolInfo(symbol);
+      return getGenericInfo(symbol, token);
   }
-}
-
-/**
- * @brief Creates basic information for a resolved but unclassified symbol.
- *
- * @param {object} symbol The generic resolved symbol.
- * @returns {object} Basic unclassified symbol information.
- */
-function getUnclassifiedSymbolInfo(symbol) {
-  return {
-    kind: 'unclassified',
-    name: symbol.identifier,
-
-    languageId: symbol.languageId,
-    classification: symbol.classification,
-    category: symbol.category,
-
-    source: {
-      uri: symbol.source.uri,
-      position: symbol.source.position,
-      wordRange: symbol.source.wordRange,
-      identifier: symbol.source.identifier
-    },
-
-    target: {
-      uri: symbol.target.uri,
-      position: symbol.target.position,
-      wordRange: symbol.target.wordRange,
-      identifier: symbol.target.identifier,
-      location: symbol.target.location,
-      resolvedBy: symbol.target.resolvedBy
-    },
-
-    provider: symbol.provider
-  };
-}
-
-/**
- * @brief Creates basic information for a symbol with an unsupported category.
- *
- * @param {object} symbol The generic resolved symbol.
- * @returns {object} Basic unsupported symbol information.
- */
-function getUnsupportedSymbolInfo(symbol) {
-  return {
-    kind: 'unsupported',
-    name: symbol.identifier,
-
-    languageId: symbol.languageId,
-    classification: symbol.classification,
-    category: symbol.category,
-
-    source: {
-      uri: symbol.source.uri,
-      position: symbol.source.position,
-      wordRange: symbol.source.wordRange,
-      identifier: symbol.source.identifier
-    },
-
-    target: {
-      uri: symbol.target.uri,
-      position: symbol.target.position,
-      wordRange: symbol.target.wordRange,
-      identifier: symbol.target.identifier,
-      location: symbol.target.location,
-      resolvedBy: symbol.target.resolvedBy
-    },
-
-    provider: symbol.provider
-  };
 }
 
 module.exports = {

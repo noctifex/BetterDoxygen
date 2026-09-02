@@ -16,12 +16,13 @@
     "url": "https://github.com/noctifex/BetterDoxygen/issues"
   },
   "homepage": "https://github.com/noctifex/BetterDoxygen#readme",
-  "icon": "/assets/icon.png",
+  "icon": "assets/icon.png",
   "categories": [
     "Other"
   ],
   "activationEvents": [
-    "*"
+    "onLanguage:c",
+    "onLanguage:cpp"
   ],
   "main": "./extension.js",
   "scripts": {
@@ -30,12 +31,12 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.125.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
-    "eslint": "^10.5.0",
+    "@types/vscode": "^1.125.0",
     "@vscode/test-cli": "^0.0.15",
     "@vscode/test-electron": "^3.0.0",
+    "eslint": "^10.5.0",
     "globals": "^17.11.0"
   },
   "overrides": {

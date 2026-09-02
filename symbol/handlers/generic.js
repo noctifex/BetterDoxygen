@@ -1,5 +1,5 @@
-// symbol/handlers/literal.js — betterdoxygen
-// Extracts information specific to literal symbols.
+// symbol/handlers/generic.js — betterdoxygen
+// Extracts information for symbols without a specialized handler.
 //
 // Copyright (C) 2026 Noctifex
 //
@@ -12,22 +12,20 @@
 // GNU General Public License for more details.
 
 /**
- * @brief Extracts information about a classified literal-like symbol.
+ * @brief Returns a symbol that does not need specialized extraction.
  *
  * @param {object} symbol The classified resolved symbol.
  * @param {import('vscode').CancellationToken} token The cancellation token.
- * @returns {Promise<object | undefined>} The extracted literal information.
+ * @returns {Promise<object | undefined>} The extracted generic symbol information.
  */
-async function getLiteralInfo(symbol, token) {
+async function getGenericInfo(symbol, token) {
   if (token.isCancellationRequested) {
     return undefined;
   }
-
-  // TODO: Extract literal-specific information.
 
   return symbol;
 }
 
 module.exports = {
-  getLiteralInfo
+  getGenericInfo
 };
