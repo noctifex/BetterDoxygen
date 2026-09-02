@@ -14,6 +14,7 @@
 const assert = require('assert');
 const vscode = require('vscode');
 
+const { classifySymbol } = require('../symbol/classify/index.js');
 const { classifyCppSymbol } = require('../symbol/classify/cpp/index.js');
 const { resolveSymbol } = require('../symbol/resolve.js');
 
@@ -68,13 +69,14 @@ function createSymbol(document, identifier, line, occurrence = 0, vscodeKind) {
 }
 
 /**
- * @brief Classifies an identifier in an in-memory C++ document.
+ * @brief Classifies an identifier in an in-memory C or C++ document.
  *
  * @param {string} content The fixture source text.
  * @param {string} identifier The target identifier.
  * @param {number} line The target line.
  * @param {number} [occurrence] The zero-based identifier occurrence.
  * @param {vscode.SymbolKind} [vscodeKind] An optional provider kind.
+ * @param {'c' | 'cpp'} [language] The fixture document language.
  * @returns {Promise<object | undefined>} The classifier result.
  */
 async function classify(
@@ -82,10 +84,11 @@ async function classify(
   identifier,
   line,
   occurrence = 0,
-  vscodeKind
+  vscodeKind,
+  language = 'cpp'
 ) {
   const document = await vscode.workspace.openTextDocument({
-    language: 'cpp',
+    language,
     content
   });
   const symbol = createSymbol(
@@ -99,11 +102,29 @@ async function classify(
   const tokenSource = new vscode.CancellationTokenSource();
 
   try {
-    return await classifyCppSymbol(symbol, tokenSource.token);
+    return await classifySymbol(symbol, tokenSource.token);
   } finally {
     tokenSource.dispose();
   }
 }
+
+suite('C symbol classification', () => {
+  test('classifies a C function through the language dispatcher', async () => {
+    const result = await classify(
+      'static int calculate(int value);',
+      'calculate',
+      0,
+      0,
+      undefined,
+      'c'
+    );
+
+    assert.strictEqual(result.languageId, 'c');
+    assert.strictEqual(result.kind, 'function');
+    assert.strictEqual(result.category, 'function');
+    assert.deepStrictEqual(result.modifiers, ['static']);
+  });
+});
 
 suite('C++ symbol classification', () => {
   test('classifies built-in literal categories', async () => {
