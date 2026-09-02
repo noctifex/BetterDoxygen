@@ -1,5 +1,6 @@
 {
   "targets": [
-    { "scheme": "file", "language": "cpp" }
+    { "language": "c" },
+    { "language": "cpp" }
   ]
 }

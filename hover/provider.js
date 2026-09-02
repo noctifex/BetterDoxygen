@@ -17,7 +17,7 @@ const { buildHoverContent } = require('./content.js');
 
 /**
  * @brief Creates the hover and returns it with the content to display.
- * 
+ *
  * @param {vscode.TextDocument} document The text document.
  * @param {vscode.Position} position The position in the document.
  * @param {vscode.CancellationToken} token A token to cancel the operation.

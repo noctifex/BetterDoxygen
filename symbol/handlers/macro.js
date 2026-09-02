@@ -1,5 +1,5 @@
-// symbol/classify/cpp.js — betterdoxygen
-// Classifies resolved C and C++ symbols.
+// symbol/handlers/macro.js — betterdoxygen
+// Extracts information specific to macro symbols.
 //
 // Copyright (C) 2026 Noctifex
 //
@@ -12,25 +12,22 @@
 // GNU General Public License for more details.
 
 /**
- * @brief Classifies a resolved C or C++ symbol.
+ * @brief Extracts information about a classified macro symbol.
  *
- * @param {object} symbol The unresolved classification symbol.
+ * @param {object} symbol The classified resolved symbol.
  * @param {import('vscode').CancellationToken} token The cancellation token.
- * @returns {Promise<object | undefined>} The symbol with classification and category fields.
+ * @returns {Promise<object | undefined>} The extracted macro information.
  */
-async function classifyCppSymbol(symbol, token) {
+async function getMacroInfo(symbol, token) {
   if (token.isCancellationRequested) {
     return undefined;
   }
 
-  // TODO: Assign classification and category.
-  return {
-    ...symbol,
-    classification: undefined,
-    category: undefined
-  };
+  // TODO: Extract macro-specific information.
+
+  return symbol;
 }
 
 module.exports = {
-  classifyCppSymbol
+  getMacroInfo
 };

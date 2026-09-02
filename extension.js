@@ -22,14 +22,14 @@ const { provideHover } = require('./hover/provider.js');
  * @param {vscode.ExtensionContext} context The extension context.
  */
 function activate(context) {
-	console.log('BetterDoxygen: Extension is now active');
+  console.log('BetterDoxygen: Extension is now active');
 
   const hoverProvider = vscode.languages.registerHoverProvider(
     config.targets,
     { provideHover }
   );
 
-	context.subscriptions.push(hoverProvider);
+  context.subscriptions.push(hoverProvider);
 
   console.log('BetterDoxygen: Hover provider registered');
 }
@@ -40,6 +40,6 @@ function activate(context) {
 function deactivate() {}
 
 module.exports = {
-	activate,
-	deactivate
+  activate,
+  deactivate
 };

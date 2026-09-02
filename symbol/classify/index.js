@@ -11,14 +11,14 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-const { classifyCppSymbol } = require('./cpp.js');
+const { classifyCppSymbol } = require('./cpp/index.js');
 
 /**
- * @brief Classifies a resolved symbol that has no provider classification.
+ * @brief Adds BetterDoxygen kind and category information to a resolved symbol.
  *
- * @param {object} symbol The unresolved classification symbol.
+ * @param {object} symbol The resolved symbol to classify.
  * @param {import('vscode').CancellationToken} token The cancellation token.
- * @returns {Promise<object | undefined>} The symbol with classification and category fields.
+ * @returns {Promise<object | undefined>} The symbol with vscodeKind, kind, and category fields.
  */
 async function classifySymbol(symbol, token) {
   if (token.isCancellationRequested) {

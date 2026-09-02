@@ -13,12 +13,14 @@
 
 const vscode = require('vscode');
 
+const { getCppLexicalRegion } = require('./classify/cpp/lexical.js');
+const { getVscodeKindName } = require('./kind.js');
+
 /**
  * @typedef {Object} ResolvedSource
- * @property {vscode.TextDocument} document
  * @property {vscode.Uri} uri
  * @property {vscode.Position} position
- * @property {vscode.Range} wordRange
+ * @property {vscode.Range} range
  * @property {string} identifier
  */
 
@@ -27,7 +29,7 @@ const vscode = require('vscode');
  * @property {vscode.TextDocument} document
  * @property {vscode.Uri} uri
  * @property {vscode.Position} position
- * @property {vscode.Range} wordRange
+ * @property {vscode.Range} range
  * @property {string} identifier
  * @property {vscode.Location} location
  * @property {'declaration' | 'definition' | 'source'} resolvedBy
@@ -35,7 +37,6 @@ const vscode = require('vscode');
 
 /**
  * @typedef {Object} ProviderSymbolInfo
- * @property {vscode.DocumentSymbol | vscode.SymbolInformation} raw
  * @property {string} name
  * @property {vscode.SymbolKind} symbolKind
  * @property {string | undefined} detail
@@ -47,12 +48,12 @@ const vscode = require('vscode');
 /**
  * @typedef {Object} ResolvedSymbol
  * @property {string} languageId
- * @property {string} identifier
+ * @property {string} name
  * @property {ResolvedSource} source
  * @property {ResolvedTarget} target
  * @property {ProviderSymbolInfo | undefined} provider
- * @property {vscode.SymbolKind | undefined} classification
- * @property {string | undefined} category
+ * @property {vscode.SymbolKind | undefined} vscodeKind
+ * @property {string | undefined} vscodeKindName
  */
 
 const documentSymbolCache = new WeakMap();
@@ -117,17 +118,23 @@ async function resolveSymbol(document, position, token) {
     return undefined;
   }
 
-  const sourceWordRange = document.getWordRangeAtPosition(position);
-  if (!sourceWordRange) {
+  const lexicalRegion = getCppRegion(document, position);
+  if (lexicalRegion?.type === 'comment') {
     return undefined;
   }
 
-  const sourceIdentifier = document.getText(sourceWordRange);
+  const sourceRange = getLiteralRange(document, lexicalRegion) ??
+    document.getWordRangeAtPosition(position);
+  if (!sourceRange) {
+    return undefined;
+  }
+
+  const sourceIdentifier = document.getText(sourceRange);
 
   const target = await resolveTarget(
     document,
     position,
-    sourceWordRange,
+    sourceRange,
     sourceIdentifier,
     token
   );
@@ -150,25 +157,24 @@ async function resolveSymbol(document, position, token) {
   const provider = providerSymbol
     ? normalizeProviderSymbol(providerSymbol)
     : undefined;
+  const vscodeKind = provider?.symbolKind;
 
   return {
     languageId: target.document.languageId,
-
-    identifier: target.identifier,
+    name: target.identifier,
 
     source: {
-      document,
       uri: document.uri,
       position,
-      wordRange: sourceWordRange,
+      range: sourceRange,
       identifier: sourceIdentifier
     },
 
     target,
 
     provider,
-    classification: provider?.symbolKind,
-    category: undefined
+    vscodeKind,
+    vscodeKindName: getVscodeKindName(vscodeKind)
   };
 }
 
@@ -179,12 +185,12 @@ async function resolveSymbol(document, position, token) {
  *
  * @param {vscode.TextDocument} document The source document.
  * @param {vscode.Position} position The source position.
- * @param {vscode.Range} sourceWordRange The source identifier range.
+ * @param {vscode.Range} sourceRange The source identifier range.
  * @param {string} sourceIdentifier The source identifier.
  * @param {vscode.CancellationToken} token The cancellation token.
  * @returns {Promise<ResolvedTarget | undefined>} The resolved target.
  */
-async function resolveTarget(document, position, sourceWordRange, sourceIdentifier, token) {
+async function resolveTarget(document, position, sourceRange, sourceIdentifier, token) {
   const resolutionStages = [
     {
       command: 'vscode.executeDeclarationProvider',
@@ -228,12 +234,12 @@ async function resolveTarget(document, position, sourceWordRange, sourceIdentifi
   return {
     document,
     uri: document.uri,
-    position: sourceWordRange.start,
-    wordRange: sourceWordRange,
+    position: sourceRange.start,
+    range: sourceRange,
     identifier: sourceIdentifier,
     location: new vscode.Location(
       document.uri,
-      sourceWordRange
+      sourceRange
     ),
     resolvedBy: 'source'
   };
@@ -264,17 +270,17 @@ async function createResolvedTarget(location, resolvedBy, expectedIdentifier, to
     return undefined;
   }
 
-  const wordRange = findIdentifierRange(document, location.range, expectedIdentifier);
-  if (!wordRange) {
+  const range = findIdentifierRange(document, location.range, expectedIdentifier);
+  if (!range) {
     return undefined;
   }
 
   return {
     document,
     uri: document.uri,
-    position: wordRange.start,
-    wordRange,
-    identifier: document.getText(wordRange),
+    position: range.start,
+    range,
+    identifier: document.getText(range),
     location,
     resolvedBy
   };
@@ -414,7 +420,6 @@ function findProviderSymbol(symbols, document, position, identifier, token) {
 function normalizeProviderSymbol(symbol) {
   if (isDocumentSymbol(symbol)) {
     return {
-      raw: symbol,
       name: symbol.name,
       symbolKind: symbol.kind,
       detail: symbol.detail || undefined,
@@ -425,7 +430,6 @@ function normalizeProviderSymbol(symbol) {
   }
 
   return {
-    raw: symbol,
     name: symbol.name,
     symbolKind: symbol.kind,
     detail: undefined,
@@ -434,6 +438,39 @@ function normalizeProviderSymbol(symbol) {
     range: symbol.location.range,
     selectionRange: symbol.location.range
   };
+}
+
+/**
+ * @brief Gets lexical information for a C or C++ position.
+ *
+ * @param {vscode.TextDocument} document The source document.
+ * @param {vscode.Position} position The position to inspect.
+ * @returns {object | undefined} The containing lexical region.
+ */
+function getCppRegion(document, position) {
+  if (document.languageId !== 'c' && document.languageId !== 'cpp') {
+    return undefined;
+  }
+
+  return getCppLexicalRegion(document, position);
+}
+
+/**
+ * @brief Creates a source range for a quoted or numeric literal.
+ *
+ * @param {vscode.TextDocument} document The source document.
+ * @param {object | undefined} lexicalRegion The containing lexical region.
+ * @returns {vscode.Range | undefined} The literal source range.
+ */
+function getLiteralRange(document, lexicalRegion) {
+  if (lexicalRegion?.type !== 'literal') {
+    return undefined;
+  }
+
+  return new vscode.Range(
+    document.positionAt(lexicalRegion.start),
+    document.positionAt(lexicalRegion.end)
+  );
 }
 
 /**

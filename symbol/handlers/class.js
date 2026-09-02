@@ -11,8 +11,6 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 // GNU General Public License for more details.
 
-const { getCommonSymbolInformation } = require('./common.js');
-
 /**
  * @brief Extracts information about a classified class-like symbol.
  *
@@ -27,9 +25,7 @@ async function getClassInfo(symbol, token) {
 
   // TODO: Extract class-specific information.
 
-  return {
-    ...getCommonSymbolInformation(symbol)
-  };
+  return symbol;
 }
 
 module.exports = {
